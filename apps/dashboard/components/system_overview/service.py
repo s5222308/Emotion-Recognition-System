@@ -1,7 +1,5 @@
 """
 System Overview Service
-CRITICAL: This preserves EXACT business logic from monolithic system
-All calculations and data structures must match original implementation
 """
 
 from collections import defaultdict, deque
@@ -9,11 +7,7 @@ from datetime import datetime
 
 
 class SystemOverviewService:
-    """Service for System Overview component
-    
-    CRITICAL: This accesses the SAME global state as the monolithic system
-    DO NOT create new data structures - use existing global state
-    """
+    """Service for System Overview component"""
     
     def __init__(self):
         # CRITICAL: Import global state from main app
@@ -21,11 +15,7 @@ class SystemOverviewService:
         pass
     
     def get_system_metrics(self):
-        """Get system performance metrics
-        
-        CRITICAL: This MUST produce the EXACT same calculations as the original
-        Original function: api_system_metrics() in app.py lines 901-917
-        """
+        """Get system performance metrics"""
         # Import global state from core module
         from core import service_metrics, debug_images, system_logs, SERVICES
         
@@ -46,11 +36,7 @@ class SystemOverviewService:
         }
     
     def get_services_status(self):
-        """Get all services status
-        
-        CRITICAL: This MUST produce the EXACT same data structure as the original
-        This is used by System Overview for service counts and status display
-        """
+        """Get all services status"""
         # Import global state from core module
         from core import service_metrics, SERVICES
         
