@@ -98,4 +98,4 @@ dlib-19.24.tar.bz2
 prepare_for_github.sh
 
 # Jupyter Notebooks
-.ipynb_checkpoints/
+.ipynb_checkpoints/config/production.env
