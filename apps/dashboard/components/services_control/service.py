@@ -28,8 +28,8 @@ class ServicesControlService:
         
         # CRITICAL: These MUST match the exact commands from monolithic app.py
         self.service_commands = {
-            'ml_service': f'cd {self.project_root} && source venv/bin/activate && python apps/ml_service/app_modular.py',
-            'ml_backend': f'cd {self.project_root} && source venv/bin/activate && python services/label_studio_connector/app.py',
+            'ml_service': f'cd {self.project_root} && source venv/bin/activate && python apps/ml_service/ml_service_app.py',
+            'ml_backend': f'cd {self.project_root} && source venv/bin/activate && python apps/label_studio_connector/app.py',
             'label_studio': f'cd {self.project_root} && LOCAL_FILES_SERVING_ENABLED=true label-studio start --port 8200'
         }
         
@@ -163,12 +163,9 @@ class ServicesControlService:
                                     'status': 'stopped'
                                 }
                         
-                        # Still running after 3 seconds, but shutdown was initiated
-                        print(f"[DEBUG] {config['name']} shutdown initiated but still running")
-                        return {
-                            'message': f'{config["name"]} shutdown initiated',
-                            'status': 'stopping'
-                        }
+                        # Still running after 3 seconds - proceed to force termination
+                        print(f"[DEBUG] {config['name']} shutdown API succeeded but process still running - proceeding to force termination")
+                        # Don't return here - continue to process termination below
                         
                 except requests.exceptions.RequestException as e:
                     print(f"[DEBUG] API shutdown failed for {service_name}: {e}")
@@ -259,11 +256,25 @@ class ServicesControlService:
                     cmdline = ' '.join(proc.info['cmdline'] or [])
                     cwd = proc.info.get('cwd', '')
                     
-                    # For ML service, check if it's python services/ml_engine/app.py OR python app.py in ml_engine directory
+                    # Enhanced process detection for each service
                     if service_name == 'ml_service':
+                        # For ML service, check if it's python with ml_service_app.py or ml_engine
                         ml_match = ('python' in cmdline and 'app.py' in cmdline and 
-                                   ('ml_engine' in cmdline or 'ml_engine' in cwd))
+                                   ('ml_service' in cmdline or 'ml_engine' in cmdline or 'ml_engine' in cwd))
                         if ml_match:
+                            running_processes.append(proc)
+                            print(f"[DEBUG] Found {service_name} process: PID {proc.info['pid']} in {cwd}")
+                    elif service_name == 'ml_backend':
+                        # For ML backend, check for label_studio_connector/app.py
+                        backend_match = ('python' in cmdline and 'app.py' in cmdline and 
+                                        'label_studio_connector' in cmdline)
+                        if backend_match:
+                            running_processes.append(proc)
+                            print(f"[DEBUG] Found {service_name} process: PID {proc.info['pid']} in {cwd}")
+                    elif service_name == 'label_studio':
+                        # For Label Studio, check for label-studio command
+                        ls_match = 'label-studio' in cmdline
+                        if ls_match:
                             running_processes.append(proc)
                             print(f"[DEBUG] Found {service_name} process: PID {proc.info['pid']} in {cwd}")
                     else:

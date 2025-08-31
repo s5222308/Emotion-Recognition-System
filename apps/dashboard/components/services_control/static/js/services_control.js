@@ -16,7 +16,7 @@ window.Dashboard.ServicesControl = {};
     // CRITICAL: Timeout constants - MUST match original exactly
     const STARTING_TIMEOUT = 60000;  // 60 seconds - same as original
     const STOPPING_TIMEOUT = 30000;  // 30 seconds - same as original
-    const HEALTH_CHECK_INTERVAL = 1000; // 1 second - EXACT match to original
+    const HEALTH_CHECK_INTERVAL = 2000; // 2 seconds - reduce log spam
     const MAX_HEALTH_CHECK_ATTEMPTS = 30; // 30 attempts = 30 seconds
     const MAX_STOP_CHECK_ATTEMPTS = 30;   // 30 attempts = 30 seconds
     
@@ -73,7 +73,7 @@ window.Dashboard.ServicesControl = {};
         
         console.log(`[START] Added ${serviceId} to servicesStarting set:`, Array.from(state.servicesStarting));
         
-        // Make API call to start service - EXACT endpoint path from analysis
+        // Make API call to start service - SIMPLIFIED approach
         window.DashboardState.secureFetch(`/api/services/start/${serviceId}`, {
             method: 'POST'
         })
@@ -83,71 +83,21 @@ window.Dashboard.ServicesControl = {};
             
             if (data.error) {
                 console.error(`[START] ${serviceId} API error:`, data.error);
-                // Remove from starting set on error - same as original
+                // Reset button state on error
                 state.servicesStarting.delete(serviceId);
                 state.isUserInteracting = false;
-                removeServiceAnimation(serviceId, 'glow-starting');
                 updateServiceCardButtons(serviceId, null, 'normal');
                 return;
             }
             
-            // Start health check polling - EXACT logic from original
-            console.log(`[START] ${serviceId} started successfully, beginning health checks...`);
+            // Service start initiated - let natural polling handle the rest
+            console.log(`[START] ${serviceId} start initiated - relying on natural polling for completion`);
             
-            let healthCheckAttempts = 0;
-            const healthCheckInterval = setInterval(() => {
-                healthCheckAttempts++;
-                console.log(`[HEALTH_CHECK] ${serviceId} attempt ${healthCheckAttempts}/${MAX_HEALTH_CHECK_ATTEMPTS}`);
-                
-                // Check service health endpoint
-                fetch(`/api/services/${serviceId}/health`)
-                    .then(response => response.json())
-                    .then(healthData => {
-                        const isHealthy = healthData.healthy;
-                        console.log(`[HEALTH_CHECK] ${serviceId} healthy: ${isHealthy}`);
-                        
-                        if (isHealthy) {
-                            console.log(`${serviceId} confirmed healthy - removing from starting state`);
-                            state.servicesStarting.delete(serviceId);
-                            delete window.serviceStartTimes?.[serviceId];
-                            clearInterval(healthCheckInterval);
-                            
-                            // Resume status updates - EXACT match to original
-                            state.isUserInteracting = false;
-                            console.log(`[DEBUG] ${serviceId} is healthy, resuming status updates`);
-                            
-                            // Remove starting glow - EXACT match to original
-                            // Status circle will be updated by natural polling to show solid green
-                            console.log(`[ANIMATION] ${serviceId} became healthy - status circle will become solid green`);
-                            
-                            // Don't force full update - let polling handle it naturally to preserve button states
-                            console.log('[DEBUG] Service operation completed - relying on natural polling for updates');
-                        } else if (healthCheckAttempts >= MAX_HEALTH_CHECK_ATTEMPTS) {
-                            console.log(`${serviceId} health check timeout - removing from starting state`);
-                            state.servicesStarting.delete(serviceId);
-                            delete window.serviceStartTimes?.[serviceId];
-                            clearInterval(healthCheckInterval);
-                            
-                            // Resume status updates and clear animation on timeout
-                            state.isUserInteracting = false;
-                            removeServiceAnimation(serviceId, 'glow-starting');
-                            updateServiceCardButtons(serviceId, null, 'normal');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`Health check error for ${serviceId}:`, error);
-                        if (healthCheckAttempts >= MAX_HEALTH_CHECK_ATTEMPTS) {
-                            state.servicesStarting.delete(serviceId);
-                            delete window.serviceStartTimes?.[serviceId];
-                            clearInterval(healthCheckInterval);
-                            
-                            // Resume status updates on error
-                            state.isUserInteracting = false;
-                            removeServiceAnimation(serviceId, 'glow-starting');
-                            updateServiceCardButtons(serviceId, null, 'normal');
-                        }
-                    });
-            }, HEALTH_CHECK_INTERVAL);
+            // Resume natural polling after 2 seconds to allow service to start
+            setTimeout(() => {
+                state.isUserInteracting = false;
+                console.log(`[DEBUG] ${serviceId} resuming natural polling`);
+            }, 2000);
             
         })
         .catch(error => {
@@ -204,7 +154,7 @@ window.Dashboard.ServicesControl = {};
         
         console.log(`[STOP] Added ${serviceId} to servicesStopping set:`, Array.from(state.servicesStopping));
         
-        // Make API call to stop service - EXACT endpoint path from analysis
+        // Make API call to stop service - SIMPLIFIED approach
         window.DashboardState.secureFetch(`/api/services/stop/${serviceId}`, {
             method: 'POST'
         })
@@ -214,71 +164,21 @@ window.Dashboard.ServicesControl = {};
             
             if (data.error) {
                 console.error(`[STOP] ${serviceId} API error:`, data.error);
-                // Remove from stopping set on error
+                // Reset button state on error
                 state.servicesStopping.delete(serviceId);
                 state.isUserInteracting = false;
-                removeServiceAnimation(serviceId, 'glow-stopping');
                 updateServiceCardButtons(serviceId, null, 'normal');
                 return;
             }
             
-            // Start stop confirmation polling - EXACT logic from original
-            console.log(`[STOP] ${serviceId} stop initiated, beginning confirmation checks...`);
+            // Service stop initiated - let natural polling handle the rest
+            console.log(`[STOP] ${serviceId} stop initiated - relying on natural polling for completion`);
             
-            let stopCheckAttempts = 0;
-            const stopCheckInterval = setInterval(() => {
-                stopCheckAttempts++;
-                console.log(`[STOP_CHECK] ${serviceId} attempt ${stopCheckAttempts}/${MAX_STOP_CHECK_ATTEMPTS}`);
-                
-                // Check if service is actually stopped
-                fetch(`/api/services/${serviceId}/health`)
-                    .then(response => response.json())
-                    .then(healthData => {
-                        const isStopped = !healthData.healthy;
-                        console.log(`[STOP_CHECK] ${serviceId} stopped: ${isStopped}`);
-                        
-                        if (isStopped) {
-                            console.log(`${serviceId} confirmed stopped - removing from stopping state`);
-                            state.servicesStopping.delete(serviceId);
-                            delete window.serviceStopTimes?.[serviceId];
-                            clearInterval(stopCheckInterval);
-                            
-                            // Resume status updates - EXACT match to original
-                            state.isUserInteracting = false;
-                            console.log(`[DEBUG] ${serviceId} is stopped, resuming status updates`);
-                            
-                            // Remove stopping glow - EXACT match to original
-                            // Status circle will be updated by natural polling to show solid red  
-                            console.log(`[ANIMATION] ${serviceId} became stopped - status circle will become solid red`);
-                            
-                            // Don't force full update - let polling handle it naturally to preserve button states
-                            console.log('[DEBUG] Service operation completed - relying on natural polling for updates');
-                        } else if (stopCheckAttempts >= MAX_STOP_CHECK_ATTEMPTS) {
-                            console.log(`${serviceId} stop check timeout - removing from stopping state`);
-                            state.servicesStopping.delete(serviceId);
-                            delete window.serviceStopTimes?.[serviceId];
-                            clearInterval(stopCheckInterval);
-                            
-                            // Resume status updates on timeout
-                            state.isUserInteracting = false;
-                            removeServiceAnimation(serviceId, 'glow-stopping');
-                            updateServiceCardButtons(serviceId, null, 'normal');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`Stop check error for ${serviceId}:`, error);
-                        if (stopCheckAttempts >= MAX_STOP_CHECK_ATTEMPTS) {
-                            state.servicesStopping.delete(serviceId);
-                            delete window.serviceStopTimes?.[serviceId];
-                            clearInterval(stopCheckInterval);
-                            
-                            // Resume status updates on error
-                            state.isUserInteracting = false;
-                            removeServiceAnimation(serviceId, 'glow-stopping');
-                            updateServiceCardButtons(serviceId, null, 'normal');
-                        }
-                    });
-            }, HEALTH_CHECK_INTERVAL);
+            // Resume natural polling after 2 seconds to allow service to stop
+            setTimeout(() => {
+                state.isUserInteracting = false;
+                console.log(`[DEBUG] ${serviceId} resuming natural polling`);
+            }, 2000);
             
         })
         .catch(error => {
