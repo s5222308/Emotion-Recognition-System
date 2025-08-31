@@ -1,6 +1,6 @@
 # Clinical Emotion Recognition System
 
-A professional-grade emotion recognition system designed for clinical and research applications, featuring state-of-the-art ML models and comprehensive video analysis capabilities.
+Emotion recognition system designed for research applications.
 
 ## Features
 
@@ -173,18 +173,6 @@ nvidia-smi  # Check GPU availability
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
-## Citation
-
-If you use this system in your research, please cite:
-```bibtex
-@software{emotion_recognition_system,
-  title={Clinical Emotion Recognition System},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/yourusername/emotion-recognition-system}
-}
-```
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -199,7 +187,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues and questions:
 - Open an issue on GitHub
-- Contact: your.email@example.com
 
 ## Contributing
 
@@ -207,4 +194,4 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ---
 
-**Note**: This system is designed for research and clinical use. Ensure compliance with relevant privacy and data protection regulations when deploying in clinical settings.
+**Note**: This system is designed for research use.
