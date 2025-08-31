@@ -10,7 +10,6 @@ class SystemOverviewService:
     """Service for System Overview component"""
     
     def __init__(self):
-        # CRITICAL: Import global state from main app
         # This ensures we use the SAME data that the monolithic system uses
         pass
     
@@ -19,12 +18,10 @@ class SystemOverviewService:
         # Import global state from core module
         from core import service_metrics, debug_images, system_logs, SERVICES
         
-        # EXACT same calculations as original (lines 905-907)
         total_requests = sum(m.get('requests', 0) for m in service_metrics.values())
         total_errors = sum(m.get('errors', 0) for m in service_metrics.values())
         healthy_services = sum(1 for m in service_metrics.values() if m.get('status') == 'healthy')
         
-        # EXACT same response structure as original (lines 909-917)
         return {
             'total_requests': total_requests,
             'total_errors': total_errors,
@@ -40,7 +37,6 @@ class SystemOverviewService:
         # Import global state from core module
         from core import service_metrics, SERVICES
         
-        # EXACT same logic as original api_services_status()
         services_data = {}
         
         print(f'[DEBUG API] service_metrics object ID: {id(service_metrics)}')
