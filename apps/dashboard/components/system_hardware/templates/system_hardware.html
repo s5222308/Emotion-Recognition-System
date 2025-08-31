@@ -1,0 +1,72 @@
+<!-- System Hardware Component -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <h4>System Hardware</h4>
+            
+            <div style="display: flex; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="margin-right: 10px;">CPU:</span>
+                        <h5 id="cpu-usage" style="margin: 0;">0%</h5>
+                    </div>
+                    <small>CPU Usage</small>
+                    <div style="background: #f0f0f0; height: 4px; margin-top: 5px;">
+                        <div id="cpu-progress" style="background: blue; height: 4px; width: 0%;"></div>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="margin-right: 10px;">Memory:</span>
+                        <h5 id="memory-usage" style="margin: 0;">0%</h5>
+                    </div>
+                    <small>Memory Usage</small>
+                    <div style="background: #f0f0f0; height: 4px; margin-top: 5px;">
+                        <div id="memory-progress" style="background: #17a2b8; height: 4px; width: 0%;"></div>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="margin-right: 10px;">Disk:</span>
+                        <h5 id="disk-usage" style="margin: 0;">0%</h5>
+                    </div>
+                    <small>Disk Usage</small>
+                    <div style="background: #f0f0f0; height: 4px; margin-top: 5px;">
+                        <div id="disk-progress" style="background: orange; height: 4px; width: 0%;"></div>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="margin-right: 10px;">GPU:</span>
+                        <h5 id="gpu-usage" style="margin: 0;">N/A</h5>
+                    </div>
+                    <small>GPU Usage</small>
+                    <div style="background: #f0f0f0; height: 4px; margin-top: 5px;">
+                        <div id="gpu-progress" style="background: green; height: 4px; width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h6>System Information</h6>
+                    <div id="system-info">
+                        <p><strong>Platform:</strong> <span id="platform">Loading...</span></p>
+                        <p><strong>Architecture:</strong> <span id="architecture">Loading...</span></p>
+                        <p><strong>Hostname:</strong> <span id="hostname">Loading...</span></p>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h6>Hardware Details</h6>
+                    <div id="hardware-details">
+                        <p><strong>CPU:</strong> <span id="cpu-name">Loading...</span></p>
+                        <p><strong>Memory:</strong> <span id="memory-details">Loading...</span></p>
+                        <p><strong>GPU:</strong> <span id="gpu-name">Loading...</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('system_hardware.static', filename='js/system_hardware.js') }}"></script>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    
+    <!-- Component-specific CSS -->
+    <link rel="stylesheet" href="{{ url_for('system_overview.static', filename='css/system_overview.css') }}">
+    <link rel="stylesheet" href="{{ url_for('annotation_setup.static', filename='css/annotation_setup.css') }}">
+    <link rel="stylesheet" href="{{ url_for('services_control.static', filename='css/services_control.css') }}">
+    <link rel="stylesheet" href="{{ url_for('system_hardware.static', filename='css/system_hardware.css') }}">
+    <link rel="stylesheet" href="{{ url_for('processing_queue.static', filename='css/processing_queue.css') }}">
+    <link rel="stylesheet" href="{{ url_for('debug_images.static', filename='css/debug_images.css') }}">
+    <link rel="stylesheet" href="{{ url_for('system_logs.static', filename='css/system_logs.css') }}">
+    
+    <!-- NO CUSTOM CSS - use base.css for exact original styling -->
+</head>
+<body>
+    <nav class="navbar">
+        <span class="navbar-brand">
+            Emotion Recognition System
+        </span>
+        <div style="float: right;">
+            <span style="color: white; margin-right: 15px;">
+                Time: <span id="current-time">--:--:--</span>
+            </span>
+            <span style="color: white;" id="refresh-icon">●</span>
+        </div>
+    </nav>
+
+    <div style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
+
+        <!-- System Overview Component -->
+        {% include 'system_overview.html' %}
+
+        <!-- Annotation Environment Setup Component -->
+        {% include 'annotation_setup_card.html' %}
+
+        <!-- Service Control Panel Component -->
+        {% include 'services_control_panel.html' %}
+
+        <!-- System Hardware Component -->
+        {% include 'system_hardware.html' %}
+
+        <!-- Processing Queue Component -->
+        {% include 'processing_queue_card.html' %}
+
+        <!-- Model Configuration Component -->
+        {% include 'model_configuration.html' %}
+
+        <!-- Debug Images Component -->
+        {% include 'debug_images.html' %}
+
+        <!-- System Logs Component -->
+        {% include 'system_logs.html' %}
+    </div>
+
+    <!-- Core JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- CRITICAL: Load shared state FIRST -->
+    <script src="{{ url_for('static', filename='js/shared_state.js') }}"></script>
+
+    <!-- Global Dashboard JavaScript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+    <script>
+        // CRITICAL: Expose user permissions to JavaScript - needed for Services Control
+        window.userPermissions = {control_services: true};
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard components initialised');
+            
+            // Initialize components in TOP-DOWN PRIORITY ORDER
+            // Priority 1: Critical above-the-fold components that users see first
+            if (typeof initializeSystemOverview === 'function') initializeSystemOverview();
+            if (typeof initializeAnnotationSetup === 'function') initializeAnnotationSetup();
+            if (typeof initializeServicesControl === 'function') initializeServicesControl();
+            
+            // Priority 2: Below-the-fold monitoring components
+            if (typeof initializeSystemHardware === 'function') initializeSystemHardware();
+            if (typeof initializeProcessingQueue === 'function') initializeProcessingQueue();
+            if (typeof initializeDebugImages === 'function') initializeDebugImages();
+            if (typeof initializeLogs === 'function') initializeLogs();
+            
+            // Start polling for updates
+            console.log('[POLLING] About to call startDashboardPolling...');
+            console.log('[POLLING] startDashboardPolling function exists:', typeof startDashboardPolling);
+            if (typeof startDashboardPolling === 'function') {
+                console.log('[POLLING] Calling startDashboardPolling now...');
+                startDashboardPolling();
+                console.log('[POLLING] startDashboardPolling call completed');
+            } else {
+                console.error('[POLLING ERROR] startDashboardPolling function not found!');
+            }
+        });
+    </script>
+</body>
+</html>

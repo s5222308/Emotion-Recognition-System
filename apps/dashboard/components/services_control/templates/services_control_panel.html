@@ -1,0 +1,29 @@
+<!-- Service Control Panel Component -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Services Control Panel</h3>
+                <div>
+                    <!-- Always show controls for localhost -->
+                    <button id="start-all-btn" onclick="startAllServices()" style="margin-right: 10px; padding: 5px 10px; background: green; color: white; border: 1px solid green; cursor: pointer;">
+                        Start All
+                    </button>
+                    <a href="javascript:void(0)" onclick="if(typeof openLabelStudio === 'function') openLabelStudio(); else window.open('http://localhost:8200', '_blank');" style="padding: 5px 10px; background: #007bff; color: white; border: 1px solid #007bff; text-decoration: none; cursor: pointer;">
+                        Open Label Studio Project
+                    </a>
+                    <span style="margin-left: 10px; color: gray; font-size: 0.9em;">
+                        Localhost Dashboard
+                        {% if label_studio_project.project_name %} | Project: {{ label_studio_project.project_name }}{% endif %}
+                    </span>
+                    <!-- No logout for localhost -->
+                </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;" id="services-row">
+                <!-- Services will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('services_control.static', filename='js/services_control.js') }}?v=1002"></script>

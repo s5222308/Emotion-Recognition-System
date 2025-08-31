@@ -1,0 +1,24 @@
+"""
+System Hardware Routes
+CRITICAL: These routes preserve EXACT API paths from monolithic system
+DO NOT change paths - components expect these exact endpoints
+"""
+
+from flask import jsonify
+from . import system_hardware_bp
+from .service import SystemHardwareService
+
+# Initialize service
+service = SystemHardwareService()
+
+@system_hardware_bp.route('/api/system/hardware')
+def api_system_hardware():
+    """Get system hardware information
+    
+    CRITICAL: This MUST preserve the exact API path /api/system/hardware
+    Components expect this exact endpoint and response format
+    """
+    # Get hardware info from service
+    hardware_info = service.get_hardware_info()
+    
+    return jsonify(hardware_info)

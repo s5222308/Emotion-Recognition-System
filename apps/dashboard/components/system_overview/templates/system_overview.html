@@ -1,0 +1,28 @@
+<!-- System Overview Component -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div id="system-overview-container">
+            <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+                <!-- System Metrics Cards -->
+                <div class="metric-card">
+                    <h6>Services Online</h6>
+                    <h3 id="healthy-services">-</h3>
+                </div>
+                <div class="metric-card">
+                    <h6>Total Requests</h6>
+                    <h3 id="total-requests">-</h3>
+                </div>
+                <div class="metric-card">
+                    <h6>Error Rate</h6>
+                    <h3 id="error-rate">-</h3>
+                </div>
+                <div class="metric-card">
+                    <h6>Debug Images</h6>
+                    <h3 id="debug-images">-</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('system_overview.static', filename='js/system_overview.js') }}"></script>

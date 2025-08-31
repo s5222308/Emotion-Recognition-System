@@ -1,0 +1,305 @@
+/* Base Dashboard Styles */
+body {
+    background: white;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+.dashboard-card {
+    background: white;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+.service-card {
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    padding: 15px;
+}
+/* Status text colors */
+.status-healthy { color: #28a745; }
+.status-unhealthy { color: #ffc107; }
+.status-down { color: #dc3545; }
+.status-unknown { color: #6c757d; }
+
+/* Status badge background colors for Bootstrap badges */
+.badge.status-healthy { background-color: #28a745 !important; color: white; transition: all 0.3s ease; }
+.badge.status-running { background-color: #28a745 !important; color: white; transition: all 0.3s ease; }
+.badge.status-unhealthy { background-color: #ffc107 !important; color: black; transition: all 0.3s ease; }
+.badge.status-down { background-color: #dc3545 !important; color: white; transition: all 0.3s ease; }
+.badge.status-stopped { background-color: #dc3545 !important; color: white; transition: all 0.3s ease; }
+.badge.status-unknown { background-color: #6c757d !important; color: white; transition: all 0.3s ease; }
+
+/* Smooth updates animation */
+.service-updating {
+    animation: pulse 0.5s;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 0 10px rgba(0,123,255,0.3); }
+    100% { transform: scale(1); }
+}
+
+.badge-flash {
+    animation: badge-flash 0.3s;
+}
+
+@keyframes badge-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.service-card {
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.service-card.glow-green {
+    animation: glow-green 1s ease-out;
+}
+
+.service-card.glow-red {
+    animation: glow-red 1s ease-out;
+}
+
+.service-card.glow-orange {
+    animation: glow-orange 1s ease-out;
+}
+
+.service-card.glow-starting {
+    animation: glow-starting 2s ease-in-out infinite;
+}
+
+.service-card.glow-stopping {
+    animation: glow-stopping 2s ease-in-out infinite;
+}
+
+@keyframes glow-green {
+    0% { box-shadow: 0 0 0 rgba(40, 167, 69, 0); }
+    50% { box-shadow: 0 0 20px rgba(40, 167, 69, 0.6); }
+    100% { box-shadow: 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes glow-red {
+    0% { box-shadow: 0 0 0 rgba(220, 53, 69, 0); }
+    50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.6); }
+    100% { box-shadow: 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+@keyframes glow-orange {
+    0% { box-shadow: 0 0 0 rgba(255, 193, 7, 0); }
+    50% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.6); }
+    100% { box-shadow: 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+@keyframes glow-starting {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 193, 7, 0); }
+    50% { box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); }
+}
+
+@keyframes glow-stopping {
+    0%, 100% { box-shadow: 0 0 0 rgba(220, 53, 69, 0); }
+    50% { box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
+}
+
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    transition: all 0.3s ease-in-out;
+}
+.status-circle.healthy {
+    background-color: #28a745;  /* Green */
+}
+.status-circle.running {
+    background-color: #20c997;  /* Teal green */
+}
+.status-circle.unhealthy {
+    background-color: #ffc107;  /* Orange/yellow */
+}
+.status-circle.down {
+    background-color: #dc3545;  /* Red */
+}
+.status-circle.stopped {
+    background-color: #e74c3c;  /* Slightly different red */
+}
+.status-circle.not_running {
+    background-color: #c0392b;  /* Darker red */
+}
+.status-circle.error {
+    background-color: #721c24;  /* Dark red */
+}
+.status-circle.unknown {
+    background-color: #6c757d;  /* Gray */
+}
+
+
+.service-controls {
+    margin-top: 10px;
+}
+.service-controls button {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+.log-entry {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    padding: 8px;
+    margin-bottom: 4px;
+    background: #f5f5f5;
+}
+.log-ERROR { border-left: 4px solid red; }
+.log-WARN { border-left: 4px solid orange; }
+.log-INFO { border-left: 4px solid blue; }
+.metric-card {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    margin: 5px;
+    padding: 15px;
+    text-align: center;
+}
+
+.navbar {
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+}
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: white;
+}
+.debug-image {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .debug-image {
+        max-width: 80px;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.debug-image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Prevent text overflow globally */
+.card-body, .dashboard-card, .log-entry, .config-info {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Specific fixes for configuration section */
+.config-value {
+    font-size: 0.9em;
+    line-height: 1.3;
+    max-width: 100%;
+    display: inline-block;
+}
+
+/* Long technical strings should break but keep consistent font */
+.technical-text {
+    font-family: inherit;
+    font-size: 0.9em;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+/* Service cards text constraints */
+.service-card .card-title {
+    font-size: 1.1em;
+    line-height: 1.2;
+}
+
+.service-card .card-text {
+    font-size: 0.9em;
+    line-height: 1.3;
+}
+
+/* Logs container text handling */
+.log-entry {
+    font-size: 0.85em;
+    line-height: 1.4;
+    word-break: break-word;
+    padding: 8px 6px;
+    margin-bottom: 4px;
+    border-left-width: 3px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.log-entry .badge {
+    margin-right: 8px;
+}
+
+/* Remove any inherited padding from logs container */
+#logs-container {
+    padding: 0;
+    margin: 0;
+}
+
+#logs-container .log-entry:first-child {
+    margin-top: 0;
+}
+
+/* Responsive text sizing */
+@media (max-width: 768px) {
+    .config-value {
+        font-size: 0.8em;
+    }
+    .technical-text {
+        font-size: 0.75em;
+    }
+    .service-card .card-title {
+        font-size: 1em;
+    }
+    .service-card .card-text {
+        font-size: 0.85em;
+    }
+}
+
+/* Fix tooltip positioning and z-index issues */
+.tooltip {
+    z-index: 10000 !important;
+    pointer-events: none !important;
+}
+
+.tooltip.show {
+    opacity: 0.9 !important;
+}
+
+/* Ensure tooltips are properly hidden */
+.tooltip:not(.show) {
+    display: none !important;
+}
+
+/* Fix tooltip position when scrolling */
+.tooltip-inner {
+    max-width: 300px;
+    padding: 8px 12px;
+    color: #fff;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    word-wrap: break-word;
+}

@@ -1,0 +1,96 @@
+/**
+ * System Hardware Component CSS
+ * Styling for hardware monitoring display
+ */
+
+/* Hardware metrics styling */
+.hardware-metric {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.hardware-metric h5 {
+    margin: 0;
+    font-weight: bold;
+}
+
+.hardware-metric span {
+    margin-right: 10px;
+}
+
+/* Progress bars */
+.hardware-progress {
+    background: #f0f0f0;
+    height: 4px;
+    margin-top: 5px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.hardware-progress-bar {
+    height: 4px;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+/* CPU progress bar */
+#cpu-progress {
+    background: #007bff;
+}
+
+/* Memory progress bar */
+#memory-progress {
+    background: #17a2b8;
+}
+
+/* Disk progress bar */
+#disk-progress {
+    background: #fd7e14;
+}
+
+/* GPU progress bar */
+#gpu-progress {
+    background: #28a745;
+}
+
+/* Hardware details sections */
+.hardware-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+.hardware-details > div {
+    flex: 1;
+    min-width: 300px;
+}
+
+.hardware-details h6 {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.hardware-details p {
+    margin-bottom: 5px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .hardware-details {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .hardware-metric {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hardware-metric span {
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+}

@@ -1,0 +1,80 @@
+<View>
+<!--  Video player with audio sync  -->
+<Video name="video" value="$video" frameRate="30"/>
+<!--  Audio player for voice analysis (using same video file for audio track)  -->
+<Audio name="audio" value="$video"/>
+
+<!--  Face emotion labels  -->
+<Labels name="face_emotion_labels" toName="video">
+<Label value="angry" background="#FF0000"/>
+<Label value="disgust" background="#8B4513"/>
+<Label value="fear" background="#800080"/>
+<Label value="happy" background="#00FF00"/>
+<Label value="sad" background="#0000FF"/>
+<Label value="surprise" background="#FFA500"/>
+<Label value="neutral" background="#808080"/>
+</Labels>
+
+<!--  Face bounding boxes using the labels  -->
+<VideoRectangle name="face_bbox" toName="video" labels="face_emotion_labels"/>
+  
+<!-- AU visualization option A: multiple selectable choices (structured) -->
+<Choices name="aus" toName="video" choice="multiple">
+  <Choice value="AU01" /><Choice value="AU02" /><Choice value="AU04" />
+  <Choice value="AU05" /><Choice value="AU06" /><Choice value="AU07" />
+  <Choice value="AU09" /><Choice value="AU10" /><Choice value="AU12" />
+  <Choice value="AU14" /><Choice value="AU15" /><Choice value="AU17" />
+  <Choice value="AU20" /><Choice value="AU23" /><Choice value="AU25" />
+  <Choice value="AU26" /><Choice value="AU45" />
+</Choices>
+
+<!-- AU visualization option B: free text per region (if you want intensities inline) -->
+<TextArea name="au_text" toName="video" perRegion="true" maxSubmissions="1" />
+
+<!--  Audio timeline for voice emotions  -->
+<TimelineLabels name="voice_emotion" toName="audio">
+<Label value="angry_voice" background="#FF0000"/>
+<Label value="calm_voice" background="#87CEEB"/>
+<Label value="disgust_voice" background="#8B4513"/>
+<Label value="fearful_voice" background="#800080"/>
+<Label value="happy_voice" background="#00FF00"/>
+<Label value="neutral_voice" background="#808080"/>
+<Label value="sad_voice" background="#0000FF"/>
+<Label value="surprised_voice" background="#FFA500"/>
+</TimelineLabels>
+
+<!--  Speech segments  -->
+<TimelineLabels name="speech_segments" toName="audio">
+<Label value="speaking" background="#4CAF50"/>
+<Label value="silence" background="#9E9E9E"/>
+<Label value="overlapping_speech" background="#FF9800"/>
+</TimelineLabels>
+
+<!--  Voice characteristics for psychology  -->
+<TimelineLabels name="voice_characteristics" toName="audio">
+<Label value="normal_tone" background="#2196F3"/>
+<Label value="elevated_pitch" background="#E91E63"/>
+<Label value="trembling_voice" background="#9C27B0"/>
+<Label value="monotone" background="#607D8B"/>
+<Label value="rapid_speech" background="#FF5722"/>
+<Label value="slow_speech" background="#795548"/>
+</TimelineLabels>
+
+<!--  Psychological distress markers  -->
+<Choices name="overall_distress" toName="video" perRegion="true">
+<Choice value="no_distress"/>
+<Choice value="mild_distress"/>
+<Choice value="moderate_distress"/>
+<Choice value="severe_distress"/>
+</Choices>
+
+<!--  Synchronized emotion (face + voice combined)  -->
+<Choices name="combined_emotion" toName="video" perRegion="true">
+<Choice value="congruent_emotions"/>
+<Choice value="incongruent_emotions"/>
+<Choice value="masked_emotion"/>
+</Choices>
+
+<!--  Notes  -->
+<TextArea name="notes" toName="video" placeholder="Clinical observations about emotional presentation"/>
+</View>

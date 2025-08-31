@@ -1,0 +1,40 @@
+<!-- Annotation Environment Setup Component -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Annotation Environment Setup</h3>
+                <div>
+                    <button onclick="checkLabelStudioSetup()" style="margin-right: 10px; padding: 5px 10px; background: #007bff; color: white; border: 1px solid #007bff; cursor: pointer;">
+                        Check Status
+                    </button>
+                    <button onclick="showSetupWizard()" style="padding: 5px 10px; background: #007bff; color: white; border: 1px solid #007bff; cursor: pointer;">
+                        Setup Wizard
+                    </button>
+                </div>
+            </div>
+            
+            <div id="setup-status" style="margin-bottom: 15px;">
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1; border: 1px solid #ccc; padding: 15px; text-align: center;">
+                        <div id="ls-status-circle" class="status-circle unknown" style="margin-bottom: 10px;"></div>
+                        <h6 style="margin-bottom: 5px;">Label Studio</h6>
+                        <small id="ls-status-text">Checking...</small>
+                    </div>
+                    <div style="flex: 1; border: 1px solid #ccc; padding: 15px; text-align: center;">
+                        <div id="ml-status-circle" class="status-circle unknown" style="margin-bottom: 10px;"></div>
+                        <h6 style="margin-bottom: 5px;">ML Backend</h6>
+                        <small id="ml-status-text">Checking...</small>
+                    </div>
+                    <div style="flex: 1; border: 1px solid #ccc; padding: 15px; text-align: center;">
+                        <div id="setup-status-circle" class="status-circle unknown" style="margin-bottom: 10px;"></div>
+                        <h6 style="margin-bottom: 5px;">Ready to Annotate</h6>
+                        <small id="setup-status-text">Checking...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('annotation_setup.static', filename='js/annotation_setup.js') }}"></script>

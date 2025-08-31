@@ -1,0 +1,21 @@
+<!-- System Logs Component -->
+<div style="width: 100%;">
+    <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4>System Logs</h4>
+            <div>
+                <select id="log-filter" style="padding: 5px; border: 1px solid #ccc;">
+                    <option value="ALL">All Levels</option>
+                    <option value="ERROR">Errors Only</option>
+                    <option value="WARN">Warnings</option>
+                    <option value="INFO">Info</option>
+                </select>
+            </div>
+        </div>
+        <div id="logs-container" style="max-height: 400px; overflow-y: auto; padding: 0; margin: 0;">
+            <p style="color: gray;">Loading logs...</p>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('system_logs.static', filename='js/system_logs.js') }}"></script>

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Label Studio
+  labelstudio:
+    image: heartexlabs/label-studio:latest
+    ports:
+      - "8200:8085"
+    environment:
+      - LABEL_STUDIO_BASE_DATA_DIR=/label-studio/data
+      - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
+      - LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files
+    volumes:
+      - ./labelstudio_data:/label-studio/data
+      - ./data/videos:/label-studio/files  # Mount local video directory
+      - ./cloud_videos:/label-studio/files/cloud  # Mount cloud sync directory
+    depends_on:
+      - ml-backend
+
+  # ML Backend
+  ml-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.ml-backend
+    ports:
+      - "9091:9091"
+    environment:
+      - ML_SERVICE_URL=http://ml-service:5002/prelabel
+    depends_on:
+      - ml-service
+
+  # ML Service
+  ml-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ml-service
+    ports:
+      - "5002:5002"
+    environment:
+      - DEVICE=cpu  # Change to cuda if GPU available
+    volumes:
+      - ./models:/app/models  # Mount model directory
+
+  # Cloud Sync Service
+  cloud-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile.cloud-sync
+    environment:
+      - CLOUD_SYNC_DIR=/app/cloud_videos
+      - LOCAL_DATA_DIR=/app/data/videos/synced
+      - LABEL_STUDIO_URL=http://labelstudio:8085
+      - LABEL_STUDIO_PROJECT_ID=1
+      - LABEL_STUDIO_TOKEN=${LABEL_STUDIO_TOKEN}
+    volumes:
+      - ./cloud_videos:/app/cloud_videos
+      - ./data/videos:/app/data/videos
+    depends_on:
+      - labelstudio
+
+  # Auto Setup Service (runs once to configure everything)
+  auto-setup:
+    build:
+      context: .
+      dockerfile: Dockerfile.setup
+    environment:
+      - LABEL_STUDIO_URL=http://labelstudio:8085
+      - ML_BACKEND_URL=http://ml-backend:9091
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-password123}
+    depends_on:
+      - labelstudio
+      - ml-backend
+    restart: "no"  # Run once only

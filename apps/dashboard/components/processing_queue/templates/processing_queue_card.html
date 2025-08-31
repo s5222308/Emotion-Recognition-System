@@ -1,0 +1,47 @@
+<!-- Processing Queue Component -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="dashboard-card">
+            <h4>Processing Queue</h4>
+            <div style="display: flex; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 150px; text-align: center;">
+                    <h5 id="queue-length" style="margin: 0;">0</h5>
+                    <small>In Queue</small>
+                </div>
+                <div style="flex: 1; min-width: 150px; text-align: center;">
+                    <h5 id="is-processing" style="margin: 0;">No</h5>
+                    <small>Processing</small>
+                </div>
+                <div style="flex: 1; min-width: 150px; text-align: center;">
+                    <h5 id="total-processed" style="margin: 0;">0</h5>
+                    <small>Completed</small>
+                </div>
+                <div style="flex: 1; min-width: 150px; text-align: center;">
+                    <h5 id="total-failed" style="margin: 0;">0</h5>
+                    <small>Failed</small>
+                </div>
+            </div>
+            
+            <div id="current-processing" style="margin-bottom: 15px; display: none;">
+                <h6 style="color: orange;">Currently Processing</h6>
+                <div id="current-task" style="background: #fff3cd; border: 1px solid orange; padding: 10px;"></div>
+            </div>
+            
+            <div id="queue-list">
+                <h6>Pending Tasks</h6>
+                <div id="queue-items" style="border: 1px solid #ccc; max-height: 150px; overflow-y: auto;">
+                    <div style="padding: 10px; color: gray;">No tasks in queue</div>
+                </div>
+            </div>
+            
+            <div id="recent-tasks" style="margin-top: 15px;">
+                <h6>Recently Completed Tasks</h6>
+                <div id="recent-items" style="border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
+                    <div style="padding: 10px; color: gray;">No recent tasks</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('processing_queue.static', filename='js/processing_queue.js') }}"></script>

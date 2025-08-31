@@ -1,0 +1,101 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Logs
+*.log
+logs/
+storage/logs/
+dashboard.log
+ml_service.log
+ml_backend.log
+label_studio.log
+
+# Storage and Data
+/storage/
+data/
+debug_preprocessed/
+# ML Models and third-party libraries (too large for git)
+*.onnx
+*.pt
+*.ckpt
+
+# Third-party libraries (4.7GB total - download separately)
+third_party/
+.vscode/
+.idea/
+**/node_modules/
+**/.next/
+dist/
+build/
+cookies.txt
+.env
+.env.*
+
+# Secure Clinical Configuration - NEVER COMMIT THESE!
+clinical_config.env
+.clinical_pids
+clinical_data/
+
+# Label Studio data
+.label-studio/
+labelstudio_data/
+
+# API Keys and Secrets
+*.key
+*.token
+*_secret*
+*_key*
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ML Models (large files)
+models/**/*.pth
+models/**/*.pkl
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+*.swp
+*.swo
+
+# Temporary files and archives
+*.tmp
+*.temp
+~*
+*.tar.bz2
+*.tar.gz
+*.zip
+dlib-19.24.tar.bz2
+
+# Preparation scripts (not for production)
+prepare_for_github.sh
+
+# Jupyter Notebooks
+.ipynb_checkpoints/

@@ -1,0 +1,24 @@
+/* Debug Images Component Styles */
+/* CRITICAL: These styles preserve the exact appearance from the original dashboard */
+
+.debug-image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.debug-image {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .debug-image {
+        max-width: 80px;
+    }
+}

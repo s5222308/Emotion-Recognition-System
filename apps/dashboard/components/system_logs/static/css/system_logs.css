@@ -1,0 +1,50 @@
+/*
+ * System Logs Component CSS
+ * CRITICAL: These styles preserve EXACT appearance from original dashboard
+ * Original styles from dashboard.html lines 142-256
+ */
+
+/* Main log entry styling */
+.log-entry {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    padding: 8px;
+    margin-bottom: 4px;
+    background: #f5f5f5;
+}
+
+/* Log level indicators with colored borders */
+.log-ERROR { 
+    border-left: 4px solid red; 
+}
+.log-WARN { 
+    border-left: 4px solid orange; 
+}
+.log-INFO { 
+    border-left: 4px solid blue; 
+}
+
+/* Refined log entry styling for better readability */
+.log-entry {
+    font-size: 0.85em;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Log level badge styling */
+.log-entry .badge {
+    margin-right: 8px;
+}
+
+/* Logs container specific styling */
+#logs-container .log-entry:first-child {
+    margin-top: 0;
+}
+
+/* Text overflow prevention for log content */
+.log-entry {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
