@@ -1,6 +1,5 @@
 """
 System Hardware Service
-CRITICAL: This preserves EXACT hardware detection logic from monolithic system
 """
 
 import psutil
@@ -10,18 +9,10 @@ from datetime import datetime
 
 
 class SystemHardwareService:
-    """Service for System Hardware component
-    
-    CRITICAL: This provides the SAME hardware info as the monolithic system
-    Original function: api_system_hardware() in app.py lines 2015-2069
-    """
+    """Service for System Hardware component"""
     
     def get_hardware_info(self):
-        """Get system hardware information
-        
-        CRITICAL: This MUST produce the EXACT same data structure as the original
-        Original function: api_system_hardware() in app.py lines 2015-2069
-        """
+        """Get system hardware information"""
         try:
             # CPU information
             cpu_info = {
@@ -76,10 +67,7 @@ class SystemHardwareService:
             return {'error': str(e)}
     
     def _get_gpu_info(self):
-        """Get GPU information if available
-        
-        CRITICAL: This is EXACT same logic as get_gpu_info() in app.py lines 946-991
-        """
+        """Get GPU information if available"""
         try:
             # Try nvidia-ml-py3 first
             try:
