@@ -63,32 +63,6 @@ models/
 - **Purpose**: Models finetuned on RAVDESS dataset
 - **Status**: Experimental/research
 
-## Model Usage by Configuration
-
-### SOTA_PHASE3 (Recommended)
-- Face Detection: `scrfd/scrfd_10g_bnkps.onnx`
-- Emotion: `efficientvit/efficientvit_m5_*.onnx` → fallback to `emotieff/fer_enet_b2_7.onnx`
-
-### SOTA_PHASE2
-- Face Detection: `scrfd/scrfd_10g_bnkps.onnx`
-- Emotion: `emotieff/fer_enet_b2_7.onnx`
-
-### SOTA_PHASE1
-- Face Detection: `scrfd/scrfd_10g_bnkps.onnx`
-- Emotion: `emotieff/fer_enet_b2_7.onnx`
-
-### CURRENT (Legacy)
-- Face Detection: InsightFace RetinaFace
-- Emotion: `emotieff/fer_enet_b2_7.onnx`
-
-## Setup Instructions
-
-### EfficientViT Models
-Run the setup script to create placeholder models:
-```bash
-python setup_efficientvit.py
-```
-
 ### SCRFD Models
 SCRFD models are automatically downloaded by InsightFace.
 

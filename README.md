@@ -6,10 +6,9 @@ Emotion recognition system designed for research applications.
 
 - **Multi-Model Support**: EfficientNet-B2 and POSTER V2 emotion recognition models
 - **Action Unit Detection**: Facial action unit analysis for detailed expression tracking
-- **Real-time Processing**: Efficient video processing with face tracking
-- **Clinical Dashboard**: Web-based monitoring and control interface
-- **Label Studio Integration**: Seamless annotation workflow for data labeling
-- **Temporal Smoothing**: Advanced temporal analysis for stable predictions
+- **Dashboard**: Web-based monitoring and control interface
+- **Label Studio Integration**: Annotation tool for data labeling
+- **Temporal Smoothing**: Temporal analysis for stable predictions
 
 ## Architecture
 

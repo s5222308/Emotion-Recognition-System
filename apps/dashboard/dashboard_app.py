@@ -91,11 +91,6 @@ class DashboardApp:
     
     def run(self):
         """Start the dashboard application"""
-        # Create directories
-        os.makedirs('../../web/templates', exist_ok=True)
-        os.makedirs('../../web/static/css', exist_ok=True)
-        os.makedirs('../../web/static/js', exist_ok=True)
-        
         # Start monitoring
         self.monitor.start()
         self.monitor._add_log('INFO', 'Modular dashboard started')
