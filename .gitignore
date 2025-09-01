@@ -94,8 +94,11 @@ Thumbs.db
 *.zip
 dlib-19.24.tar.bz2
 
-# Preparation scripts (not for production)
-prepare_for_github.sh
-
 # Jupyter Notebooks
 .ipynb_checkpoints/config/production.env
+
+# Test scripts and temporary files
+test_*.py
+compare_*.sh
+LibreFace/
+

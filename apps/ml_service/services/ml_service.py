@@ -1,7 +1,7 @@
 """
 ML Service Business Logic
-Core emotion recognition service and video processing functions
-EXTRACTED from original app.py - preserves all functionality
+Universal ML Service using ONNX-only models
+ANY ONNX model can be plugged in via config file!
 """
 import os
 import cv2
@@ -13,12 +13,14 @@ import uuid
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-# Import ML models from models directory
-from models.emotion_inference import EnhancedEmotionModel
+# Import our universal ONNX system
+from models.universal_onnx import UniversalONNXModel, ModelOutput, create_emotion_output
+
+# Legacy imports for action unit support
 from models.action_unit_detector import ActionUnitDetector, ActionUnitOutput
-from models import POSTER_V2_AVAILABLE
-if POSTER_V2_AVAILABLE:
-    from models.poster_v2_model import PosterV2EmotionModel
+
+# Import temporal processing utilities
+from utils.video_processing import TemporalProcessor, AdaptiveSampling, detect_emotion_transitions
 from insightface.app import FaceAnalysis
 
 logger = logging.getLogger(__name__)
@@ -26,131 +28,257 @@ logger = logging.getLogger(__name__)
 # Global service instance
 emotion_service = None
 
-class SimpleTwoStageService:
-    """Enhanced three-stage emotion recognition: InsightFace + Emotion Model + Action Units
-    EXACT copy from original app.py
+class UniversalMLService:
+    """
+    Universal ML Service using ONNX-only models
+    - Face detection: ANY ONNX face detector
+    - Emotion recognition: ANY ONNX emotion model
+    - Completely configurable via JSON registry
     """
     
-    def __init__(self, use_poster_v2=False, enable_au_detection=False):
+    def __init__(self, registry_path: str = None):
         self.ok = False
         self.face_detector = None
         self.emotion_model = None
-        self.au_detector = None
         self.conf_threshold = 0.5
-        self.use_poster_v2 = use_poster_v2  # Feature flag to switch models
-        self.enable_au_detection = enable_au_detection  # Feature flag for AU detection
         
-        self._init_components()
+        # Set registry path - use absolute path to project root
+        if registry_path is None:
+            project_root = Path(__file__).parent.parent.parent.parent
+            self.registry_path = str(project_root / "config" / "model_registry.json")
+        else:
+            self.registry_path = registry_path
+            
+        self.registry = None
+        self.active_config = None
+        
+        # Action Unit detection support
+        self.enable_au_detection = False
+        self.au_detector = None
+        self.au_detector_type = None
+        
+        self._load_registry()
+        self._init_models()
     
-    def _init_components(self):
-        """Initialize InsightFace detector and emotion model"""
+    def _load_registry(self):
+        """Load model registry configuration"""
         try:
-            logger.info("Initializing InsightFace detector...")
+            with open(self.registry_path, 'r') as f:
+                self.registry = json.load(f)
             
-            # Stage 1: InsightFace Detection (proven working approach)
-            self.face_detector = FaceAnalysis(
-                providers=['CPUExecutionProvider'],
-                allowed_modules=['detection']
-            )
-            self.face_detector.prepare(ctx_id=-1, det_size=(640, 640))
+            self.active_config = self.registry.get('active_config', {})
+            logger.info(f"✓ Model registry loaded: {self.registry_path}")
+            logger.info(f"  Active face detector: {self.active_config.get('face_detector')}")
+            logger.info(f"  Active emotion model: {self.active_config.get('emotion_model')}")
+            logger.info(f"  Sample rate: {self.active_config.get('sample_rate', 3)}")
             
-            # Stage 2: Emotion Recognition - choose between models
-            if self.use_poster_v2 and POSTER_V2_AVAILABLE:
-                logger.info("Initializing POSTER V2 emotion model...")
-                self.emotion_model = PosterV2EmotionModel(
-                    device="cpu",
-                    enable_temporal=False
-                )
-            else:
-                if self.use_poster_v2 and not POSTER_V2_AVAILABLE:
-                    logger.warning("POSTER V2 requested but not available - falling back to EfficientNet-B2")
-                logger.info("Initializing EfficientNet-B2 emotion model...")
-                model_path = "/home/lleyt/WIL_project/emotion_labelstudio_final/models/emotieff/fer_enet_b2_7.onnx"
-                self.emotion_model = EnhancedEmotionModel(
-                    onnx_path=model_path,
-                    device="cpu",
-                    enable_temporal=False
-                )
+        except Exception as e:
+            logger.error(f"Failed to load registry {self.registry_path}: {e}")
+            raise
+    
+    def _init_models(self):
+        """Initialize models from registry"""
+        try:
+            # Initialize face detector
+            face_detector_id = self.active_config.get('face_detector')
+            if face_detector_id and face_detector_id in self.registry.get('face_detectors', {}):
+                face_config = self.registry['face_detectors'][face_detector_id]
+                logger.info(f"Initializing face detector: {face_config['name']}")
+                
+                # For now, keep using InsightFace until we have ONNX version
+                # TODO: Replace with universal ONNX face detector
+                if face_detector_id == 'insightface_onnx':
+                    # Fallback to old InsightFace until we convert it
+                    from insightface.app import FaceAnalysis
+                    self.face_detector = FaceAnalysis(
+                        providers=['CPUExecutionProvider'],
+                        allowed_modules=['detection']
+                    )
+                    self.face_detector.prepare(ctx_id=-1, det_size=(640, 640))
+                else:
+                    # Use universal ONNX face detector
+                    self.face_detector = UniversalONNXModel(face_config)
+                
+                logger.info(f"✓ Face detector initialized: {face_config['name']}")
             
-            # Stage 3: Action Unit Detection (optional)
-            if self.enable_au_detection:
-                logger.info("Initializing Action Unit detector...")
-                self.au_detector = ActionUnitDetector()
+            # Initialize emotion model
+            emotion_model_id = self.active_config.get('emotion_model')
+            if emotion_model_id and emotion_model_id in self.registry.get('emotion_models', {}):
+                emotion_config = self.registry['emotion_models'][emotion_model_id]
+                logger.info(f"Initializing emotion model: {emotion_config['name']}")
+                
+                # Use universal ONNX emotion model
+                self.emotion_model = UniversalONNXModel(emotion_config)
+                
+                if self.emotion_model.ok:
+                    logger.info(f"✓ Emotion model initialized: {emotion_config['name']}")
+                else:
+                    raise Exception(f"Failed to initialize emotion model: {emotion_config['name']}")
             
-            self.ok = self.emotion_model.ok
+            # Initialize AU detector
+            au_detector_id = self.active_config.get('au_detector')
+            if au_detector_id and au_detector_id in self.registry.get('au_detectors', {}):
+                au_config = self.registry['au_detectors'][au_detector_id]
+                if au_config.get('enabled', False):
+                    logger.info(f"Initializing AU detector: {au_config['name']}")
+                    self.au_detector_type = au_config.get('type')
+                    
+                    if self.au_detector_type == 'external':
+                        # Use existing OpenFace-based detector
+                        from models.action_unit_detector import ActionUnitDetector
+                        self.au_detector = ActionUnitDetector(au_config.get('command_path'))
+                        self.enable_au_detection = True
+                    elif self.au_detector_type == 'derived':
+                        # Use emotion-based AU estimation
+                        self.enable_au_detection = True
+                        self.au_detector = None  # Will use emotion predictions
+                    elif self.au_detector_type == 'onnx':
+                        # Future: Use ONNX AU detector
+                        # self.au_detector = UniversalONNXModel(au_config)
+                        logger.warning(f"ONNX AU detector not yet implemented: {au_config['name']}")
+                    
+                    if self.enable_au_detection:
+                        logger.info(f"✓ AU detector initialized: {au_config['name']}")
+            
+            # Service is ready if we have both models
+            self.ok = (self.face_detector is not None and 
+                      self.emotion_model is not None and 
+                      self.emotion_model.ok)
             
             if self.ok:
-                model_name = "POSTER V2" if self.use_poster_v2 else "EfficientNet-B2"
-                au_status = "Enabled" if self.enable_au_detection else "Disabled"
-                logger.info("Enhanced pipeline initialized successfully!")
-                logger.info("Face Detector: InsightFace (True)")
-                logger.info(f"Emotion Model: {model_name} ({self.emotion_model.ok})")
-                logger.info(f"Action Units: {au_status}")
+                face_name = self.registry['face_detectors'][face_detector_id]['name']
+                emotion_name = self.registry['emotion_models'][emotion_model_id]['name']
+                au_name = "None"
+                if au_detector_id and au_detector_id in self.registry.get('au_detectors', {}):
+                    au_name = self.registry['au_detectors'][au_detector_id]['name']
+                logger.info("Universal ML Service ready!")
+                logger.info(f"  Face Detector: {face_name}")
+                logger.info(f"  Emotion Model: {emotion_name}")
+                logger.info(f"  AU Detector: {au_name}")
+                logger.info("  Architecture: Universal ONNX")
             else:
-                logger.error("Failed to initialize pipeline components")
+                logger.error("Failed to initialize Universal ML Service")
                 
         except Exception as e:
-            logger.error(f"Pipeline initialization failed: {e}")
+            logger.error(f"Model initialization failed: {e}")
             self.ok = False
     
     def process_frame(self, frame, debug_info=None):
-        """Process a single frame: InsightFace detection -> Emotion recognition
-        EXACT copy from original app.py
-        """
+        """Process a single frame with universal ONNX models"""
         if not self.ok:
             return []
         
-        debug_enabled = debug_info and debug_info.get('enabled', False)
-        
         try:
-            # Stage 1: InsightFace Detection (clean working approach)
-            faces = self.face_detector.get(frame)
-            results = []
-            
-            for face_idx, face in enumerate(faces):
-                # InsightFace gives bbox as [x1, y1, x2, y2] and det_score
-                if face.det_score >= self.conf_threshold:
-                    bbox = face.bbox.astype(int)
-                    x1, y1, x2, y2 = bbox
-                    face_conf = face.det_score
-                    
-                    # Stage 2: Emotion recognition on detected face
-                    if debug_enabled:
-                        # Pass debug info to emotion model for step-by-step visualization
-                        debug_context = {
-                            'session_dir': debug_info['session_dir'],
-                            'frame_idx': debug_info['frame_idx'],
-                            'face_idx': face_idx,
-                            'input_frame': frame
-                        }
-                        emotion_result = self.emotion_model.predict(frame, (x1, y1, x2, y2), debug_context)
-                    else:
-                        emotion_result = self.emotion_model.predict(frame, (x1, y1, x2, y2))
-                    
-                    emotion = emotion_result.label
-                    emotion_conf = emotion_result.confidence
-                    
-                    results.append({
-                        'bbox': [int(x1), int(y1), int(x2), int(y2)],
-                        'emotion': emotion,
-                        'confidence': float(emotion_conf),
-                        'face_confidence': float(face_conf)
-                    })
+            # Stage 1: Face Detection
+            # For now, use InsightFace API (will be replaced with universal ONNX)
+            if hasattr(self.face_detector, 'get'):  # InsightFace
+                faces = self.face_detector.get(frame)
+                results = []
+                
+                for face_idx, face in enumerate(faces):
+                    if face.det_score >= self.conf_threshold:
+                        bbox = face.bbox.astype(int)
+                        x1, y1, x2, y2 = bbox
+                        face_conf = face.det_score
+                        
+                        # Stage 2: Universal ONNX Emotion Recognition
+                        emotion_output = self.emotion_model.predict(frame, [x1, y1, x2, y2])
+                        
+                        results.append({
+                            'bbox': [int(x1), int(y1), int(x2), int(y2)],
+                            'emotion': emotion_output.label,
+                            'confidence': float(emotion_output.confidence),
+                            'face_confidence': float(face_conf)
+                        })
+                        
+            else:  # Universal ONNX face detector
+                face_detections = self.face_detector.predict(frame)
+                results = []
+                
+                for detection in face_detections:
+                    if detection.confidence >= self.conf_threshold:
+                        x1, y1, x2, y2 = detection.bbox
+                        
+                        # Stage 2: Universal ONNX Emotion Recognition  
+                        emotion_output = self.emotion_model.predict(frame, [x1, y1, x2, y2])
+                        
+                        results.append({
+                            'bbox': [int(x1), int(y1), int(x2), int(y2)],
+                            'emotion': emotion_output.label,
+                            'confidence': float(emotion_output.confidence),
+                            'face_confidence': float(detection.confidence)
+                        })
             
             return results
             
         except Exception as e:
             logger.error(f"Frame processing failed: {e}")
             return []
+    
+    def get_model_info(self) -> Dict[str, str]:
+        """Get current model information"""
+        if not self.registry or not self.active_config:
+            return {"face_detector": "Unknown", "emotion_model": "Unknown", "au_detector": "None"}
+        
+        face_detector_id = self.active_config.get('face_detector', 'unknown')
+        emotion_model_id = self.active_config.get('emotion_model', 'unknown')
+        au_detector_id = self.active_config.get('au_detector', 'none')
+        
+        face_name = "Unknown"
+        emotion_name = "Unknown"
+        au_name = "None"
+        
+        if face_detector_id in self.registry.get('face_detectors', {}):
+            face_name = self.registry['face_detectors'][face_detector_id]['name']
+        
+        if emotion_model_id in self.registry.get('emotion_models', {}):
+            emotion_name = self.registry['emotion_models'][emotion_model_id]['name']
+        
+        if au_detector_id in self.registry.get('au_detectors', {}):
+            au_name = self.registry['au_detectors'][au_detector_id]['name']
+        
+        return {
+            "face_detector": face_name,
+            "emotion_model": emotion_name,
+            "au_detector": au_name,
+            "architecture": "Universal ONNX"
+        }
+    
+    def switch_models(self, face_detector_id: str = None, emotion_model_id: str = None, sample_rate: int = None):
+        """Switch to different models and settings without restarting service"""
+        try:
+            logger.info(f"Switching models - face: {face_detector_id}, emotion: {emotion_model_id}, sample_rate: {sample_rate}")
+            
+            # Update active config
+            if face_detector_id:
+                self.active_config['face_detector'] = face_detector_id
+            if emotion_model_id:
+                self.active_config['emotion_model'] = emotion_model_id
+            if sample_rate is not None:
+                self.active_config['sample_rate'] = sample_rate
+                logger.info(f"Updated sample rate to: {sample_rate}")
+            
+            # Save updated config
+            self.registry['active_config'] = self.active_config
+            with open(self.registry_path, 'w') as f:
+                json.dump(self.registry, f, indent=2)
+            
+            # Reinitialize models
+            self._init_models()
+            
+            logger.info("✓ Models switched successfully!")
+            return self.get_model_info()
+            
+        except Exception as e:
+            logger.error(f"Failed to switch models: {e}")
+            raise
 
 def process_video(video_path: str, frame_limit: Optional[int] = None, 
                  sample_rate: int = 3) -> Dict[str, Any]:
-    """Process video using two-stage pipeline
-    EXACT copy from original app.py
-    """
+    """Process video using universal ONNX pipeline"""
     
     if emotion_service is None or not emotion_service.ok:
-        return {'error': 'Two-stage service not initialized'}
+        return {'error': 'Universal ML service not initialized'}
     
     # Create unique debug session ID for this video
     video_name = Path(video_path).stem
@@ -160,8 +288,9 @@ def process_video(video_path: str, frame_limit: Optional[int] = None,
     debug_session_dir = str(project_root / "debug_preprocessed" / session_id)
     
     start_time = time.time()
-    logger.info(f"Processing video with two-stage pipeline: {video_path}")
+    logger.info(f"Processing video with Universal ONNX pipeline: {video_path}")
     logger.info(f"Debug session: {session_id}")
+    logger.info(f"Sample rate: {sample_rate} (processing every {sample_rate} frames)")
     
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -192,6 +321,11 @@ def process_video(video_path: str, frame_limit: Optional[int] = None,
     best_debug_frame = None    # Track highest confidence frame for debug
     best_debug_confidence = 0.0
     
+    # Initialize temporal processing
+    temporal_processor = TemporalProcessor(window_size=15)  # 0.5s at 30fps
+    adaptive_sampler = AdaptiveSampling(min_interval=1, max_interval=10)
+    last_processed_idx = -1
+    
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -201,20 +335,39 @@ def process_video(video_path: str, frame_limit: Optional[int] = None,
         if frame_limit and processed_frames >= frame_limit:
             break
         
-        # Skip frames based on sample rate
-        if frame_idx % sample_rate != 0:
-            frame_idx += 1
-            continue
+        # Use fixed sample rate if specified, otherwise use adaptive sampling
+        if sample_rate > 1:
+            # Fixed sampling
+            if frame_idx % sample_rate != 0:
+                frame_idx += 1
+                continue
+        else:
+            # Adaptive sampling only when sample_rate = 1
+            if not adaptive_sampler.should_process_frame(frame, frame_idx, last_processed_idx):
+                frame_idx += 1
+                continue
         
-        # Process frame with two-stage pipeline - collect confidence to find best debug frame
+        last_processed_idx = frame_idx
+        
+        # Process frame with Universal ONNX pipeline - collect confidence to find best debug frame
         try:
             # Process frame without debug first to get confidence
             frame_results = emotion_service.process_frame(frame)
             
+            # Apply temporal smoothing to frame results
+            if frame_results:
+                frame_results = temporal_processor.add_frame_predictions(
+                    frame_results, frame_idx
+                )
+            
             # Find highest confidence face in this frame
             frame_max_confidence = 0.0
             if frame_results:
-                frame_max_confidence = max(result['confidence'] for result in frame_results)
+                # Use smoothed confidence if available, otherwise regular confidence
+                frame_max_confidence = max(
+                    result.get('smoothed_confidence', result['confidence']) 
+                    for result in frame_results
+                )
                 
                 # Track best frame for debug visualization
                 if frame_max_confidence > best_debug_confidence:
@@ -283,11 +436,23 @@ def process_video(video_path: str, frame_limit: Optional[int] = None,
         }
         tracks.append(track)
     
+    # Get video summary from temporal processor
+    video_summary = temporal_processor.get_video_summary()
+    
+    # Detect emotion transitions
+    transitions = detect_emotion_transitions(all_predictions, min_duration=5)
+    
     # Package results in expected format (include AU data if available)
     results = {
         'predictions': all_predictions,
         'video_info': video_info,
-        'tracks': tracks
+        'tracks': tracks,
+        'temporal_analysis': {
+            'summary': video_summary,
+            'transitions': transitions,
+            'smoothing_applied': True,
+            'face_tracks': len(temporal_processor.face_tracks)
+        }
     }
     
     # Add AU results if available
@@ -385,29 +550,23 @@ def get_emotion_service():
     return emotion_service
 
 def initialize_emotion_service():
-    """Initialize the global emotion service instance
-    Called from app.py on startup
-    """
+    """Initialize the global Universal ML service instance"""
     global emotion_service
     
-    # Check environment flags for model selection
-    use_poster_v2 = os.getenv('USE_POSTER_V2', 'false').lower() == 'true'
-    enable_au_detection = os.getenv('ENABLE_AU_DETECTION', 'false').lower() == 'true'
-    
-    model_name = "POSTER V2" if use_poster_v2 else "EfficientNet-B2"
-    au_status = " + Action Units" if enable_au_detection else ""
-    
     logger.info("=" * 60)
-    logger.info(f"Enhanced Emotion ML Service - InsightFace + {model_name}{au_status}")
+    logger.info("Universal ML Service - ONNX Only Architecture")
+    logger.info("ANY model can be plugged in via config!")
     logger.info("=" * 60)
     
-    # Initialize the enhanced service
-    logger.info(f"Initializing InsightFace + {model_name} service...")
-    emotion_service = SimpleTwoStageService(use_poster_v2=use_poster_v2, enable_au_detection=enable_au_detection)
+    # Initialize the universal service
+    emotion_service = UniversalMLService()
     
     if emotion_service.ok:
-        logger.info(f"InsightFace + {model_name} service ready!")
+        model_info = emotion_service.get_model_info()
+        logger.info(f"Universal ML Service ready!")
+        logger.info(f"Face Detector: {model_info['face_detector']}")
+        logger.info(f"Emotion Model: {model_info['emotion_model']}")
     else:
-        logger.error("Failed to initialize service")
+        logger.error("Failed to initialize Universal ML Service")
     
     return emotion_service

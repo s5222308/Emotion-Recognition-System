@@ -1,0 +1,145 @@
+{
+  "face_detectors": {
+    "insightface_onnx": {
+      "name": "InsightFace (ONNX)",
+      "description": "High accuracy face detector converted to ONNX",
+      "type": "detector",
+      "onnx_path": "models/face_detectors/insightface_det.onnx",
+      "input_size": [
+        640,
+        640
+      ],
+      "confidence_threshold": 0.5,
+      "normalization": "imagenet",
+      "labels": [
+        "face"
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "pros": "Very accurate, handles difficult poses",
+      "cons": "Slower inference speed"
+    },
+    "yolo_face": {
+      "name": "YOLO Face Detector",
+      "description": "Ultra-fast YOLO-based face detection",
+      "type": "detector",
+      "onnx_path": "models/face_detectors/yolov8n-face.onnx",
+      "input_size": [
+        640,
+        640
+      ],
+      "confidence_threshold": 0.25,
+      "normalization": "zero_one",
+      "labels": [
+        "face"
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "pros": "Ultra fast, modern architecture",
+      "cons": "Slightly less accurate than research models"
+    }
+  },
+  "emotion_models": {
+    "efficientnet_b2": {
+      "name": "EfficientNet-B2",
+      "description": "Baseline emotion recognition model (already ONNX)",
+      "type": "classifier",
+      "onnx_path": "/home/lleyt/WIL_project/emotion_labelstudio_final/models/emotieff/fer_enet_b2_7.onnx",
+      "input_size": [
+        260,
+        260
+      ],
+      "confidence_threshold": 0.0,
+      "normalization": "imagenet",
+      "apply_softmax": true,
+      "labels": [
+        "angry",
+        "disgust",
+        "fear",
+        "happy",
+        "sad",
+        "surprise",
+        "neutral"
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "pros": "Stable, well-tested, fast inference",
+      "cons": "Lower accuracy than newer models"
+    },
+    "poster_v2_onnx": {
+      "name": "POSTER V2 (ONNX)",
+      "description": "State-of-the-art transformer model converted to ONNX",
+      "type": "classifier",
+      "onnx_path": "/home/lleyt/WIL_project/refactor/models/emotion_models/poster_v2.onnx",
+      "input_size": [
+        224,
+        224
+      ],
+      "confidence_threshold": 0.0,
+      "normalization": "imagenet",
+      "apply_softmax": true,
+      "labels": [
+        "angry",
+        "disgust",
+        "fear",
+        "happy",
+        "sad",
+        "surprise",
+        "neutral"
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "pros": "Highest accuracy, modern architecture",
+      "cons": "Requires more memory, slower inference"
+    }
+  },
+  "au_detectors": {
+    "openface_external": {
+      "name": "OpenFace (External)",
+      "description": "Traditional OpenFace using external binary",
+      "type": "external",
+      "command_path": "/home/lleyt/WIL_project/emotion_labelstudio_final/third_party/OpenFace/build/bin/FeatureExtraction",
+      "enabled": false,
+      "pros": "Most accurate, well-tested",
+      "cons": "Requires external binary, slower"
+    },
+    "emotion_based": {
+      "name": "Emotion-Based AU Estimation",
+      "description": "Estimates AUs from emotion predictions",
+      "type": "derived",
+      "enabled": true,
+      "pros": "No additional model needed, fast",
+      "cons": "Less accurate, approximation only"
+    },
+    "libreface_onnx": {
+      "name": "LibreFace AU (ONNX)",
+      "description": "Neural network AU detector (placeholder for future)",
+      "type": "onnx",
+      "onnx_path": "/home/lleyt/WIL_project/refactor/models/au_detectors/libreface_au.onnx",
+      "input_size": [
+        112,
+        112
+      ],
+      "num_aus": 12,
+      "enabled": true,
+      "pros": "Neural network based, ONNX compatible",
+      "cons": "Model not yet available"
+    }
+  },
+  "active_config": {
+    "face_detector": "insightface_onnx",
+    "emotion_model": "poster_v2_onnx",
+    "au_detector": "libreface_onnx",
+    "sample_rate": 1
+  },
+  "metadata": {
+    "version": "2.0",
+    "last_updated": "2025-08-31",
+    "description": "Universal ONNX-only model registry - any model can be added!",
+    "architecture": "universal_onnx"
+  }
+}

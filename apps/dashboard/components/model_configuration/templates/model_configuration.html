@@ -2,21 +2,255 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="dashboard-card">
-            <h4>Model Configuration</h4>
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 10px;">
-                    <h6>ML Service Config</h6>
-                    <div id="ml-config-status" class="badge badge-secondary">Loading...</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4>Model Configuration</h4>
+                <div>
+                    <button onclick="refreshModelInfo()" style="padding: 5px 10px; background: #007bff; color: white; border: 1px solid #007bff; cursor: pointer; border-radius: 3px;">
+                        Refresh
+                    </button>
                 </div>
-                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 10px;">
-                    <h6>Authentication</h6>
-                    <div class="badge badge-success">Active</div>
+            </div>
+            
+            <!-- Active Models Display -->
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+                <div style="flex: 1; min-width: 250px; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <h6 style="margin-bottom: 10px; color: #2c3e50;">Face Detector</h6>
+                    <div id="active-face-detector" style="font-size: 14px; color: #2c3e50; font-weight: bold;">Loading...</div>
+                    <div id="face-detector-info" style="font-size: 12px; color: #666; margin-top: 5px;">Loading details...</div>
+                    <select id="face-detector-select" style="width: 100%; margin-top: 10px; padding: 5px;">
+                        <option value="">Select face detector...</option>
+                    </select>
                 </div>
-                <div style="flex: 1; min-width: 200px; text-align: center; margin-bottom: 10px;">
-                    <h6>Rate Limiting</h6>
-                    <div class="badge badge-success">Enabled</div>
+                <div style="flex: 1; min-width: 250px; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <h6 style="margin-bottom: 10px; color: #2c3e50;">Emotion Model</h6>
+                    <div id="active-emotion-model" style="font-size: 14px; color: #2c3e50; font-weight: bold;">Loading...</div>
+                    <div id="emotion-model-info" style="font-size: 12px; color: #666; margin-top: 5px;">Loading details...</div>
+                    <select id="emotion-model-select" style="width: 100%; margin-top: 10px; padding: 5px;">
+                        <option value="">Select emotion model...</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 250px; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                    <h6 style="margin-bottom: 10px; color: #2c3e50;">AU Detector</h6>
+                    <div id="active-au-detector" style="font-size: 14px; color: #2c3e50; font-weight: bold;">Loading...</div>
+                    <div id="au-detector-info" style="font-size: 12px; color: #666; margin-top: 5px;">Loading details...</div>
+                    <select id="au-detector-select" style="width: 100%; margin-top: 10px; padding: 5px;">
+                        <option value="">Select AU detector...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Processing Settings -->
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <h6 style="margin-bottom: 15px; color: #2c3e50;">Processing Settings</h6>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div>
+                        <label for="sample-rate-select" style="display: block; margin-bottom: 5px; font-size: 14px;">
+                            Sample Rate (process every Nth frame):
+                        </label>
+                        <select id="sample-rate-select" style="padding: 5px 10px; width: 150px;">
+                            <option value="1">1 (Adaptive)</option>
+                            <option value="2">2 (15 fps)</option>
+                            <option value="3" selected>3 (10 fps)</option>
+                            <option value="5">5 (6 fps)</option>
+                            <option value="10">10 (3 fps)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; font-size: 12px; color: #666;">
+                        <strong>Current: <span id="current-sample-rate">3</span></strong><br>
+                        Lower = More frames processed (higher accuracy, slower)<br>
+                        Higher = Fewer frames processed (faster, may miss details)
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <button onclick="switchModels()" style="padding: 10px 30px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 16px;">
+                    Apply Configuration
+                </button>
+            </div>
+
+            <!-- Model Registry Status -->
+            <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                <h6 style="margin-bottom: 10px;">Registry Status</h6>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                    <div style="text-align: center;">
+                        <div id="available-face-detectors" style="font-size: 18px; font-weight: bold; color: #007bff;">-</div>
+                        <small>Face Detectors</small>
+                    </div>
+                    <div style="text-align: center;">
+                        <div id="available-emotion-models" style="font-size: 18px; font-weight: bold; color: #28a745;">-</div>
+                        <small>Emotion Models</small>
+                    </div>
+                    <div style="text-align: center;">
+                        <div id="registry-status" style="font-size: 18px; font-weight: bold; color: #17a2b8;">Ready</div>
+                        <small>Registry</small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Model Configuration JavaScript
+async function refreshModelInfo() {
+    try {
+        // Get current models via dashboard API (no CORS issues)
+        const response = await fetch('/api/model-config/current');
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Update active models display
+            if (data.current) {
+                document.getElementById('active-face-detector').textContent = data.current.face_detector;
+                document.getElementById('face-detector-info').textContent = 'Active and running';
+                
+                document.getElementById('active-emotion-model').textContent = data.current.emotion_model;
+                document.getElementById('emotion-model-info').textContent = 'Active and running';
+                
+                document.getElementById('active-au-detector').textContent = data.current.au_detector || 'None';
+                document.getElementById('au-detector-info').textContent = data.current.au_detector ? 'Active and running' : 'Not configured';
+            }
+            
+            // Update registry info and populate dropdowns
+            if (data.registry) {
+                if (document.getElementById('available-face-detectors')) {
+                    document.getElementById('available-face-detectors').textContent = data.registry.face_detectors_count;
+                }
+                if (document.getElementById('available-emotion-models')) {
+                    document.getElementById('available-emotion-models').textContent = data.registry.emotion_models_count;
+                }
+                
+                if (data.registry.architecture && document.getElementById('ml-architecture')) {
+                    document.getElementById('ml-architecture').textContent = data.registry.architecture;
+                }
+                
+                // Update sample rate
+                if (data.current.sample_rate) {
+                    document.getElementById('current-sample-rate').textContent = data.current.sample_rate;
+                    document.getElementById('sample-rate-select').value = data.current.sample_rate;
+                }
+                
+                // Populate dropdowns
+                populateDropdowns(data.registry);
+            }
+            
+        } else {
+            // Handle error response
+            const errorData = await response.json();
+            console.error('API error:', errorData);
+            
+            document.getElementById('active-face-detector').textContent = 'Error';
+            document.getElementById('face-detector-info').textContent = errorData.error || 'Service unavailable';
+            
+            document.getElementById('active-emotion-model').textContent = 'Error';
+            document.getElementById('emotion-model-info').textContent = errorData.error || 'Service unavailable';
+            
+            document.getElementById('active-au-detector').textContent = 'Error';
+            document.getElementById('au-detector-info').textContent = errorData.error || 'Service unavailable';
+        }
+        
+    } catch (error) {
+        console.error('Failed to refresh model info:', error);
+        document.getElementById('active-face-detector').textContent = 'Connection Error';
+        document.getElementById('face-detector-info').textContent = 'Check console for details';
+        
+        document.getElementById('active-emotion-model').textContent = 'Connection Error';
+        document.getElementById('emotion-model-info').textContent = 'Check console for details';
+        
+        document.getElementById('active-au-detector').textContent = 'Connection Error';
+        document.getElementById('au-detector-info').textContent = 'Check console for details';
+    }
+}
+
+function populateDropdowns(registry) {
+    // Populate face detector dropdown
+    const faceSelect = document.getElementById('face-detector-select');
+    faceSelect.innerHTML = '<option value="">Select face detector...</option>';
+    
+    if (registry.face_detectors) {
+        Object.entries(registry.face_detectors).forEach(([key, model]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = model.name;
+            faceSelect.appendChild(option);
+        });
+    }
+    
+    // Populate emotion model dropdown
+    const emotionSelect = document.getElementById('emotion-model-select');
+    emotionSelect.innerHTML = '<option value="">Select emotion model...</option>';
+    
+    if (registry.emotion_models) {
+        Object.entries(registry.emotion_models).forEach(([key, model]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = model.name;
+            emotionSelect.appendChild(option);
+        });
+    }
+    
+    // Populate AU detector dropdown
+    const auSelect = document.getElementById('au-detector-select');
+    auSelect.innerHTML = '<option value="">Select AU detector...</option>';
+    
+    if (registry.au_detectors) {
+        Object.entries(registry.au_detectors).forEach(([key, detector]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = detector.name;
+            auSelect.appendChild(option);
+        });
+    }
+}
+
+async function switchModels() {
+    const faceDetector = document.getElementById('face-detector-select').value;
+    const emotionModel = document.getElementById('emotion-model-select').value;
+    const auDetector = document.getElementById('au-detector-select').value;
+    const sampleRate = document.getElementById('sample-rate-select').value;
+    
+    // Allow changing just sample rate or models
+    if (!faceDetector && !emotionModel && !auDetector && !sampleRate) {
+        alert('Please select at least one model or change the sample rate');
+        return;
+    }
+    
+    const payload = {};
+    if (faceDetector) payload.face_detector = faceDetector;
+    if (emotionModel) payload.emotion_model = emotionModel;
+    if (auDetector) payload.au_detector = auDetector;
+    if (sampleRate) payload.sample_rate = parseInt(sampleRate);
+    
+    try {
+        const response = await fetch('/api/model-config/switch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            alert('Models switched successfully!');
+            refreshModelInfo();
+        } else {
+            const error = await response.json();
+            alert('Error switching models: ' + (error.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Switch error:', error);
+        alert('Failed to switch models: ' + error.message);
+    }
+}
+
+// Initialize model info on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshModelInfo();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(refreshModelInfo, 30000);
+});
+</script>

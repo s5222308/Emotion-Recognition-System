@@ -21,16 +21,22 @@ def health():
         if emotion_service is None:
             return jsonify({'status': 'initializing'}), 503
         
-        # Get dynamic model info
-        model_name = "POSTER V2" if hasattr(emotion_service, 'use_poster_v2') and emotion_service.use_poster_v2 else "EfficientNet-B2"
-        service_name = "Enhanced Emotion ML Service" if hasattr(emotion_service, 'enable_au_detection') and emotion_service.enable_au_detection else "SimpleTwoStageService"
-        
-        health_info = {
-            'status': 'healthy' if emotion_service.ok else 'error',
-            'face_detector': 'InsightFace',
-            'emotion_model': model_name,
-            'service': service_name
-        }
+        if hasattr(emotion_service, 'get_model_info'):
+            model_info = emotion_service.get_model_info()
+            health_info = {
+                'status': 'healthy' if emotion_service.ok else 'error',
+                'face_detector': model_info.get('face_detector', 'Unknown'),
+                'emotion_model': model_info.get('emotion_model', 'Unknown'),
+                'au_detector': model_info.get('au_detector', 'None'),
+                'service': 'Universal ML Service'
+            }
+        else:
+            health_info = {
+                'status': 'healthy' if emotion_service.ok else 'error',
+                'face_detector': 'Legacy',
+                'emotion_model': 'Legacy',
+                'service': 'Legacy Service'
+            }
         
         if emotion_service.ok:
             return jsonify(health_info), 200
@@ -159,4 +165,38 @@ def shutdown():
         
     except Exception as e:
         logger.exception(f"Shutdown failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@health_bp.route('/models/current', methods=['GET'])
+def get_current_models():
+    """Get current active models"""
+    try:
+        emotion_service = get_emotion_service()
+        if emotion_service and hasattr(emotion_service, 'get_model_info'):
+            model_info = emotion_service.get_model_info()
+            return jsonify(model_info), 200
+        else:
+            return jsonify({'error': 'Service not available'}), 503
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@health_bp.route('/models/switch', methods=['POST'])
+def switch_models():
+    """Switch active models"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        emotion_service = get_emotion_service()
+        if emotion_service and hasattr(emotion_service, 'switch_models'):
+            face_detector = data.get('face_detector')
+            emotion_model = data.get('emotion_model')
+            sample_rate = data.get('sample_rate')
+            
+            result = emotion_service.switch_models(face_detector, emotion_model, sample_rate)
+            return jsonify({'success': True, 'models': result}), 200
+        else:
+            return jsonify({'error': 'Service not available'}), 503
+    except Exception as e:
         return jsonify({'error': str(e)}), 500

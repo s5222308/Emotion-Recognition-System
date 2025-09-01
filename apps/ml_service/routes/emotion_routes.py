@@ -22,7 +22,9 @@ def prelabel():
     data = request.json
     video_path = data.get('video_path', '')
     frame_limit = data.get('frame_limit', None)
-    sample_rate = data.get('sample_rate', 3)
+    # Use configured sample rate if not specified in request
+    default_rate = emotion_service.active_config.get('sample_rate', 3) if emotion_service else 3
+    sample_rate = data.get('sample_rate', default_rate)
     
     if not video_path or not os.path.exists(video_path):
         return jsonify({'error': 'Video path not found'}), 400

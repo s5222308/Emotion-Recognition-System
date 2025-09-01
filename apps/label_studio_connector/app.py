@@ -286,60 +286,33 @@ def queue_status():
     })
 
 def get_dynamic_model_version():
-    """Get dynamic model version from actual ML service components"""
+    """Get dynamic model version from Universal ONNX system"""
     try:
-        # Query ML service for component information
+        # Query ML service for Universal ONNX model information
         response = requests.get(ML_SERVICE_HEALTH_URL, timeout=5)
         if response.status_code == 200:
             health_data = response.json()
-            component_details = health_data.get('component_details', {})
             
-            # Extract detailed component information
-            face_detector_info = component_details.get('face_detector', {})
-            emotion_processor_info = component_details.get('emotion_processor', {})
-            clinical_wrapper_info = component_details.get('clinical_wrapper', {})
-            temporal_info = component_details.get('temporal_attention', {})
+            # Get current active models
+            face_detector = health_data.get('face_detector', 'Unknown')
+            emotion_model = health_data.get('emotion_model', 'Unknown')
+            service_type = health_data.get('service', 'Unknown')
             
-            # Build multiline version string with detailed component information
-            version_lines = []
-            
-            # Face Detector
-            face_detector_name = face_detector_info.get('name', 'Unknown')
-            face_detector_type = face_detector_info.get('type', '')
-            if face_detector_type:
-                version_lines.append(f"Face Detector: {face_detector_name} ({face_detector_type})")
-            else:
-                version_lines.append(f"Face Detector: {face_detector_name}")
-            
-            # Emotion Model
-            emotion_model_name = emotion_processor_info.get('name', 'Unknown')
-            backbone = emotion_processor_info.get('backbone', '')
-            if backbone:
-                version_lines.append(f"Emotion Model: {emotion_model_name} ({backbone})")
-            else:
-                version_lines.append(f"Emotion Model: {emotion_model_name}")
-            
-            # Clinical Safety
-            clinical_name = clinical_wrapper_info.get('name', 'Unknown')
-            uncertainty_threshold = clinical_wrapper_info.get('uncertainty_threshold', 0.7)
-            version_lines.append(f"Clinical Safety: {clinical_name} (threshold={uncertainty_threshold})")
-            
-            # Temporal Processing
-            temporal_name = temporal_info.get('name', 'Unknown')
-            window_size = temporal_info.get('window_size', 16)
-            temporal_method = emotion_processor_info.get('temporal_method', 'none')
-            version_lines.append(f"Temporal: {temporal_method} (window={window_size})")
-            
-            # Architecture
-            version_lines.append("Architecture: Modular V2")
+            # Build version string for Universal ONNX system
+            version_lines = [
+                f"Face Detector: {face_detector}",
+                f"Emotion Model: {emotion_model}", 
+                f"Service: {service_type}",
+                "Architecture: Universal ONNX"
+            ]
             
             return "\n".join(version_lines)
         else:
             logger.warning(f"Failed to get ML service health: {response.status_code}")
-            return "ModularEmotionV2-Clinical-Safety (components unknown)"
+            return "Universal ONNX System (service unavailable)"
     except Exception as e:
-        logger.error(f"Failed to query ML service components: {e}")
-        return "ModularEmotionV2-Clinical-Safety (offline)"
+        logger.error(f"Failed to query ML service: {e}")
+        return "Universal ONNX System (offline)"
 
 @app.route('/setup', methods=['POST'])
 def setup():
@@ -385,10 +358,10 @@ def process_single_video(task, ls_frame_count):
             logger.info(f"[PARALLEL] Calling ML service for: {video_path}")
             try:
                 # Call real ML service - process full videos with intelligent sampling
+                # Don't send sample_rate - let ML service use its configured default from registry
                 ml_response = requests.post(ML_SERVICE_URL, json={
                     'video_path': video_path,
-                    'frame_limit': None,  # Process full video (None = no artificial limit)
-                    'sample_rate': 3      # Every 3rd frame (industry standard: 10fps from 30fps)
+                    'frame_limit': None   # Process full video (None = no artificial limit)
                 }, timeout=300)  # 5 minute timeout per video (reasonable for longer videos)
                 
                 if ml_response.status_code == 200:
@@ -703,8 +676,14 @@ def convert_to_label_studio_format(ml_data, video_path=None):
     """Convert ML service predictions to Label Studio videorectangle format with AU data - simplified!"""
     annotations = []
     
-    # Check if we have tracks with actual bounding boxes
-    tracks = ml_data.get('tracks', [])
+    # Use full_results.tracks if available (contains ALL frames), otherwise fallback to tracks
+    if 'full_results' in ml_data and 'tracks' in ml_data.get('full_results', {}):
+        tracks = ml_data['full_results']['tracks']
+        logger.info(f"Using full_results.tracks with {len(tracks)} frames (all processed frames)")
+    else:
+        tracks = ml_data.get('tracks', [])
+        logger.info(f"Using top-level tracks with {len(tracks)} frames")
+    
     predictions = ml_data.get('predictions', [])
     action_units = ml_data.get('action_units', [])
     au_info = ml_data.get('au_analysis_info', {})
@@ -732,7 +711,25 @@ def convert_to_label_studio_format(ml_data, video_path=None):
     sequence = []
     emotions_per_frame = []
     
-    # Create keyframes intelligently - only when emotion changes or significant movement
+    # Check if we're using fixed sampling (all frames should be keyframes)
+    # Detect fixed sampling by checking if frames are evenly spaced
+    use_all_frames = False
+    if len(boxes) > 1:
+        # Check if frames are evenly spaced (fixed sampling)
+        frame_numbers = [box.get('frame', 0) for box in boxes]
+        if len(frame_numbers) > 1:
+            intervals = [frame_numbers[i+1] - frame_numbers[i] for i in range(len(frame_numbers)-1)]
+            # If all intervals are the same (or very close), it's fixed sampling
+            if intervals and all(abs(interval - intervals[0]) <= 1 for interval in intervals):
+                use_all_frames = True
+                logger.info(f"Fixed sampling detected ({len(boxes)} frames with interval {intervals[0]}) - using ALL frames as keyframes")
+    
+    if not use_all_frames and len(boxes) > 20:
+        # Fallback: if we have many frames, also treat as fixed sampling
+        use_all_frames = True
+        logger.info(f"Many frames detected ({len(boxes)} frames) - using ALL frames as keyframes")
+    
+    # Create keyframes - either all frames (fixed sampling) or intelligent selection
     prev_emotion = None
     prev_bbox = None
     keyframe_interval = 15  # Force keyframe every 15 frames (0.5 seconds at 30fps)
@@ -761,8 +758,11 @@ def convert_to_label_studio_format(ml_data, video_path=None):
         # Decide if this should be a keyframe
         should_add_keyframe = False
         
+        # If using all frames (fixed sampling), always add keyframe
+        if use_all_frames:
+            should_add_keyframe = True
         # Always add first detected frame (where face actually appears)
-        if i == 0 and force_first_kf:
+        elif i == 0 and force_first_kf:
             should_add_keyframe = True
             logger.info(f"Adding FIRST keyframe at ML frame {ml_frame} → LS frame {ls_frame}")
         # Always add last detected frame  
